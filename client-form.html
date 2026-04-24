@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spherion — Staffing Request</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --or:#E8611A;--or-dk:#c45114;--or-lt:#fff0e8;
+  --bl:#1E6FA5;--bl-dk:#165a88;--bl-lt:#e8f2fa;
+  --ink:#1a1a2a;--paper:#f6f7f9;--card:#fff;
+  --muted:#6b6e7a;--border:#dde0e8;
+  --green:#1a7a46;--green-bg:#edf7f3;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+
+.topbar{background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:58px;gap:12px}
+.tl{display:flex;align-items:center;gap:14px}
+.tl img{height:32px;width:auto;filter:brightness(0) invert(1)}
+.tsep{width:1px;height:22px;background:rgba(255,255,255,.18)}
+.tlbl{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.4)}
+.cbadge{font-family:'Barlow Condensed',sans-serif;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--or);background:rgba(232,97,26,.15);border:1px solid rgba(232,97,26,.35);padding:3px 10px;border-radius:2px}
+.btn-qr{display:flex;align-items:center;gap:7px;background:var(--or);color:#fff;border:none;padding:8px 18px;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;border-radius:2px;cursor:pointer;transition:background .13s}
+.btn-qr:hover{background:var(--or-dk)}
+
+.hero{background:var(--bl);padding:44px 40px 54px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-50px;top:-50px;width:260px;height:260px;border-radius:50%;background:var(--or);opacity:.13}
+.hero::after{content:'';position:absolute;left:-30px;bottom:-70px;width:180px;height:180px;border-radius:50%;background:#fff;opacity:.04}
+.hi{position:relative;z-index:1;max-width:700px;margin:0 auto}
+.eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:10px}
+.hero h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(2rem,5vw,2.8rem);font-weight:700;color:#fff;line-height:1.05;letter-spacing:-.3px;margin-bottom:10px}
+.hero h1 span{color:var(--or)}
+.hero p{color:rgba(255,255,255,.6);font-size:.92rem;font-weight:300;line-height:1.6}
+.steps{display:flex;gap:6px;margin-top:22px;flex-wrap:wrap}
+.step{font-family:'Barlow Condensed',sans-serif;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.4)}
+.step.on{border-color:var(--or);color:var(--or);background:rgba(232,97,26,.12)}
+
+.cont{max-width:720px;margin:0 auto;padding:36px 24px 72px}
+
+.slbl{display:flex;align-items:center;gap:10px;font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--or);margin-bottom:14px}
+.slbl::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:30px 34px;margin-bottom:22px;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.s2{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:6px}
+label{font-size:.73rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink)}
+.req{color:var(--or);margin-left:2px}
+input,select,textarea{font-family:'Barlow',sans-serif;font-size:.94rem;color:var(--ink);background:var(--paper);border:1.5px solid var(--border);border-radius:3px;padding:10px 13px;outline:none;width:100%;-webkit-appearance:none;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--bl);box-shadow:0 0 0 3px rgba(30,111,165,.1);background:#fff}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%236b6e7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;cursor:pointer}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+.char{text-align:right;font-size:.68rem;color:var(--muted);margin-top:3px}
+
+.urgrow{display:flex;gap:8px;flex-wrap:wrap}
+input[type=radio].urg{display:none}
+.ulbl{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border:1.5px solid var(--border);border-radius:3px;font-size:.82rem;font-weight:500;cursor:pointer;transition:all .13s;background:var(--paper);user-select:none}
+.udot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+input[type=radio].urg[value=low]+.ulbl .udot{background:#27ae60}
+input[type=radio].urg[value=medium]+.ulbl .udot{background:#e8a020}
+input[type=radio].urg[value=high]+.ulbl .udot{background:var(--or)}
+input[type=radio].urg[value=critical]+.ulbl .udot{background:#c0202a}
+input[type=radio].urg:checked+.ulbl{border-color:var(--or);background:var(--or);color:#fff}
+.ulbl:hover{border-color:var(--or)}
+
+.btn-sub{width:100%;padding:15px;background:var(--or);color:#fff;border:none;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .13s,transform .08s;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-sub:hover{background:var(--or-dk)}
+.btn-sub:active{transform:scale(.998)}
+.sp{display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.btn-sub.loading .sp{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.err{display:none;background:#fff4f0;border:1px solid var(--or);border-radius:3px;padding:12px 16px;font-size:.85rem;color:#a84010;margin-bottom:18px;line-height:1.5}
+.err.show{display:block}
+
+.scard{display:none;background:var(--green-bg);border:1.5px solid #27ae60;border-radius:4px;padding:40px;text-align:center;margin-bottom:22px}
+.scard.show{display:block;animation:fup .35s ease}
+@keyframes fup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.sicon{width:56px;height:56px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:1.4rem;color:#fff}
+.scard h2{font-family:'Barlow Condensed',sans-serif;font-size:1.7rem;font-weight:700;color:var(--green);letter-spacing:-.3px;margin-bottom:8px}
+.scard p{color:#2a5a3a;font-size:.9rem;line-height:1.6}
+.ref{display:inline-block;margin-top:16px;font-size:.82rem;background:#fff;border:1px solid #27ae60;color:var(--green);padding:6px 18px;border-radius:2px;letter-spacing:.1em}
+.btn-new{margin-top:20px;padding:10px 26px;background:transparent;border:1.5px solid var(--bl);border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;color:var(--bl);transition:all .13s}
+.btn-new:hover{background:var(--bl);color:#fff}
+
+.setup{background:#fff8e6;border:1px solid #f0c840;border-radius:3px;padding:14px 18px;margin-bottom:22px;display:none;align-items:center;gap:12px;flex-wrap:wrap}
+.setup p{font-size:.83rem;color:#7a5a10;flex:1;min-width:180px;line-height:1.5}
+.setup input{background:#fff;border:1.5px solid #e8c040;flex:1;min-width:150px;max-width:200px;padding:8px 12px;font-size:.84rem}
+.setup button{background:var(--or);color:#fff;border:none;padding:9px 18px;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border-radius:2px;cursor:pointer;white-space:nowrap}
+
+.mbg{display:none;position:fixed;inset:0;background:rgba(10,15,30,.68);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.mbg.open{display:flex}
+.modal{background:#fff;border-radius:6px;padding:40px 44px 34px;text-align:center;max-width:400px;width:92%;position:relative;box-shadow:0 28px 80px rgba(0,0,0,.22);animation:mIn .22s ease}
+@keyframes mIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+.mclose{position:absolute;top:14px;right:18px;background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)}
+.mlogo{margin-bottom:14px}
+.mlogo img{height:36px;width:auto}
+.modal h3{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:-.3px;margin-bottom:6px;color:var(--ink)}
+.msub{font-size:.82rem;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.mtag{display:inline-block;font-size:.7rem;font-weight:600;color:var(--or);background:rgba(232,97,26,.1);border:1px solid rgba(232,97,26,.3);padding:4px 12px;border-radius:2px;margin-bottom:18px;letter-spacing:.08em;text-transform:uppercase}
+#qrcode{display:flex;justify-content:center;margin-bottom:12px}
+#qrcode canvas,#qrcode img{border:8px solid var(--paper);border-radius:2px}
+.qrurl{font-size:.67rem;color:var(--muted);word-break:break-all;background:var(--paper);padding:7px 11px;border-radius:2px;margin-bottom:16px;text-align:left;border:1px solid var(--border);line-height:1.4}
+.mbtns{display:flex;gap:10px;justify-content:center}
+.mbtns button{padding:9px 20px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--ink);transition:all .12s}
+.mbtns .bp{background:var(--bl);color:#fff;border-color:var(--bl)}
+.mbtns button:hover{opacity:.8}
+
+@media(max-width:600px){
+  .hero{padding:30px 18px 38px}
+  .card{padding:18px 14px}
+  .g2{grid-template-columns:1fr}
+  .cont{padding:22px 12px 56px}
+  .topbar{padding:0 14px}
+  .modal{padding:30px 20px 26px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tl">
+    <img src="logo.png" alt="Spherion Staffing & Recruiting">
+    <div class="tsep"></div>
+    <div class="tlbl">Client Portal</div>
+    <div class="cbadge" id="clientBadge">No Client Set</div>
+  </div>
+  <button class="btn-qr" onclick="openQR()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="0.5" stroke="white" stroke-width="1.4"/><rect x="8" y="1" width="5" height="5" rx="0.5" stroke="white" stroke-width="1.4"/><rect x="1" y="8" width="5" height="5" rx="0.5" stroke="white" stroke-width="1.4"/><rect x="9" y="9" width="1.5" height="1.5" fill="white"/><rect x="11.5" y="9" width="1.5" height="1.5" fill="white"/><rect x="9" y="11.5" width="1.5" height="1.5" fill="white"/><rect x="11.5" y="11.5" width="1.5" height="1.5" fill="white"/></svg>
+    Get QR Code
+  </button>
+</div>
+
+<div class="hero">
+  <div class="hi">
+    <div class="eyebrow">Spherion Staffing &amp; Recruiting</div>
+    <h1>Submit a <span>Staffing</span> Request</h1>
+    <p>Fill out the form below. Your request will be logged to your dedicated tracking sheet and reviewed by our placement team.</p>
+    <div class="steps">
+      <div class="step on">01 · Fill Form</div>
+      <div class="step">02 · Submit</div>
+      <div class="step">03 · Tracked &amp; Assigned</div>
+    </div>
+  </div>
+</div>
+
+<div class="cont">
+  <div class="setup" id="setupStrip">
+    <p><strong>Admin setup:</strong> Enter a client name to generate a permanent, dedicated QR code for this client.</p>
+    <input type="text" id="setupName" placeholder="Client company name…">
+    <button onclick="applyClient()">Set Client</button>
+  </div>
+
+  <div class="err" id="errBar"></div>
+
+  <div class="scard" id="successCard">
+    <div class="sicon">✓</div>
+    <h2>Request Submitted!</h2>
+    <p>Your staffing request has been logged. A Spherion representative will follow up with you shortly.</p>
+    <div class="ref" id="refBox">SR-XXXXXXXX</div><br>
+    <button class="btn-new" onclick="resetForm()">Submit Another Request</button>
+  </div>
+
+  <form id="mainForm" onsubmit="handleSubmit(event)">
+
+    <div class="slbl">Position Details</div>
+    <div class="card">
+      <div class="g2">
+        <div class="field s2">
+          <label>Job Title<span class="req">*</span></label>
+          <input type="text" id="jobTitle" placeholder="e.g. Warehouse Associate, Staff Accountant, CNC Operator" required>
+        </div>
+        <div class="field">
+          <label>Pay Range<span class="req">*</span></label>
+          <input type="text" id="payRange" placeholder="e.g. $18–$22/hr or $60K–$80K" required>
+        </div>
+        <div class="field">
+          <label>Headcount Needed<span class="req">*</span></label>
+          <input type="number" id="headcount" placeholder="1" min="1" required>
+        </div>
+        <div class="field">
+          <label>Department / Cost Code<span class="req">*</span></label>
+          <input type="text" id="department" placeholder="e.g. Operations — CC-2400" required>
+        </div>
+        <div class="field">
+          <label>Employment Type</label>
+          <select id="empType">
+            <option value="">Select…</option>
+            <option>Full-Time</option>
+            <option>Part-Time</option>
+            <option>Contract</option>
+            <option>Contract-to-Hire</option>
+            <option>Temporary</option>
+            <option>Temp-to-Perm</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="slbl">Urgency &amp; Timeline</div>
+    <div class="card">
+      <div class="g2">
+        <div class="field s2">
+          <label>Level of Urgency<span class="req">*</span></label>
+          <div class="urgrow">
+            <input type="radio" class="urg" name="urgency" id="u1" value="low" required>
+            <label class="ulbl" for="u1"><span class="udot"></span> Low</label>
+            <input type="radio" class="urg" name="urgency" id="u2" value="medium">
+            <label class="ulbl" for="u2"><span class="udot"></span> Medium</label>
+            <input type="radio" class="urg" name="urgency" id="u3" value="high">
+            <label class="ulbl" for="u3"><span class="udot"></span> High</label>
+            <input type="radio" class="urg" name="urgency" id="u4" value="critical">
+            <label class="ulbl" for="u4"><span class="udot"></span> Critical</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Target Start Date</label>
+          <input type="date" id="startDate">
+        </div>
+        <div class="field">
+          <label>Hiring Manager</label>
+          <input type="text" id="hiringManager" placeholder="Full name">
+        </div>
+        <div class="field s2">
+          <label>Description / Notes</label>
+          <textarea id="notes" maxlength="600" placeholder="Responsibilities, required skills, shift info, physical requirements, dress code…" oninput="document.getElementById('cc').textContent=this.value.length"></textarea>
+          <div class="char"><span id="cc">0</span> / 600</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slbl">Your Information</div>
+    <div class="card">
+      <div class="g2">
+        <div class="field">
+          <label>Your Name<span class="req">*</span></label>
+          <input type="text" id="reqName" placeholder="Full name" required>
+        </div>
+        <div class="field">
+          <label>Your Email<span class="req">*</span></label>
+          <input type="email" id="reqEmail" placeholder="you@company.com" required>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-sub" id="submitBtn">
+      <span class="sp"></span>
+      Submit Request to Spherion
+    </button>
+  </form>
+</div>
+
+<div class="mbg" id="qrModal" onclick="closeModalOut(event)">
+  <div class="modal">
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mlogo"><img src="logo.png" alt="Spherion"></div>
+    <h3>Client QR Code</h3>
+    <p class="msub">This QR is permanently linked to this client. All submissions track together in your Google Sheet.</p>
+    <div class="mtag" id="modalTag">CLIENT: —</div>
+    <div id="qrcode"></div>
+    <div class="qrurl" id="qrUrlBox"></div>
+    <div class="mbtns">
+      <button onclick="dlQR()">↓ Download PNG</button>
+      <button class="bp" onclick="copyLink()">Copy Link</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL="PASTE_YOUR_APPS_SCRIPT_URL_HERE";
+const urlP=new URLSearchParams(location.search);
+let clientId=urlP.get("client")||"";
+let clientName=urlP.get("name")?decodeURIComponent(urlP.get("name")):"";
+function init(){
+  if(!clientId){document.getElementById("setupStrip").style.display="flex";document.getElementById("clientBadge").textContent="No Client Set";}
+  else document.getElementById("clientBadge").textContent=clientName||clientId;
+}
+function applyClient(){
+  const n=document.getElementById("setupName").value.trim();if(!n)return;
+  const id=n.toLowerCase().replace(/[^a-z0-9]/g,"-").replace(/-+/g,"-");
+  location.href=location.origin+location.pathname+"?client="+encodeURIComponent(id)+"&name="+encodeURIComponent(n);
+}
+async function handleSubmit(e){
+  e.preventDefault();
+  const err=document.getElementById("errBar");err.classList.remove("show");
+  const urg=document.querySelector('input[name="urgency"]:checked');
+  if(!urg){err.textContent="Please select a level of urgency.";err.classList.add("show");return;}
+  const btn=document.getElementById("submitBtn");btn.classList.add("loading");
+  const p={action:"submit",clientId:clientId||"WALK-IN",clientName:clientName||clientId||"Walk-In",
+    jobTitle:document.getElementById("jobTitle").value,payRange:document.getElementById("payRange").value,
+    headcount:document.getElementById("headcount").value,department:document.getElementById("department").value,
+    employmentType:document.getElementById("empType").value,urgency:urg.value,
+    startDate:document.getElementById("startDate").value,hiringManager:document.getElementById("hiringManager").value,
+    notes:document.getElementById("notes").value,requesterName:document.getElementById("reqName").value,
+    requesterEmail:document.getElementById("reqEmail").value};
+  try{
+    const res=await fetch(APPS_SCRIPT_URL,{method:"POST",body:JSON.stringify(p)});
+    const r=await res.json();
+    if(r.success){document.getElementById("refBox").textContent="Ref: "+r.requestId;document.getElementById("mainForm").style.display="none";document.getElementById("successCard").classList.add("show");window.scrollTo({top:0,behavior:"smooth"});}
+    else throw new Error(r.error);
+  }catch(ex){err.textContent="⚠ Could not submit. Ensure the Apps Script URL is configured. ("+ex.message+")";err.classList.add("show");btn.classList.remove("loading");}
+}
+function resetForm(){document.getElementById("mainForm").reset();document.getElementById("cc").textContent="0";document.getElementById("mainForm").style.display="block";document.getElementById("successCard").classList.remove("show");window.scrollTo({top:0,behavior:"smooth"});}
+let qrBuilt=false;
+function openQR(){
+  const url=location.href.split("#")[0];
+  document.getElementById("qrUrlBox").textContent=url;
+  document.getElementById("modalTag").textContent="CLIENT: "+(clientName||clientId||"Not Set");
+  document.getElementById("qrModal").classList.add("open");
+  if(!qrBuilt){new QRCode(document.getElementById("qrcode"),{text:url,width:200,height:200,colorDark:"#1a1a2a",colorLight:"#f6f7f9",correctLevel:QRCode.CorrectLevel.H});qrBuilt=true;}
+}
+function closeModal(){document.getElementById("qrModal").classList.remove("open")}
+function closeModalOut(e){if(e.target===document.getElementById("qrModal"))closeModal()}
+function copyLink(){navigator.clipboard.writeText(location.href).then(()=>{const b=event.target;b.textContent="Copied!";setTimeout(()=>b.textContent="Copy Link",2000)})}
+function dlQR(){const c=document.querySelector("#qrcode canvas");if(!c)return;const a=document.createElement("a");a.download="spherion-qr-"+(clientId||"form")+".png";a.href=c.toDataURL();a.click()}
+init();
+</script>
+</body>
+</html>
