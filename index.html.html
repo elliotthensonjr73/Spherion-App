@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spherion — Staffing Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --or:#E8611A;--or-dk:#c45114;
+  --bl:#1E6FA5;--bl-dk:#165a88;
+  --bg:#0e1520;--surf:#141d2e;--surf2:#1a2440;
+  --border:#253050;--text:#dde4f0;--muted:#6a7898;
+  --green:#27ae60;--yellow:#e8a020;--red:#e03030;--crit:#8b1a2a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.layout{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{width:248px;background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.slogo{padding:20px 22px 18px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px}
+.slogo img{height:30px;width:auto;filter:brightness(0) invert(1)}
+.slogo-sub{font-family:'Barlow Condensed',sans-serif;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.ssec{padding:18px 16px 6px;font-family:'Barlow Condensed',sans-serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:.87rem;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all .12s}
+.nav:hover{background:var(--surf2);color:var(--text)}
+.nav.on{background:var(--surf2);color:var(--text);border-left-color:var(--or)}
+.nav .ico{width:16px;text-align:center;font-size:.88rem}
+.nc{margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;background:var(--border);padding:2px 8px;border-radius:20px;color:var(--muted)}
+.nc.hot{background:rgba(232,97,26,.2);color:var(--or)}
+
+.qr-gen{padding:14px 16px 16px}
+.qr-gen-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.qg-input{width:100%;background:var(--surf2);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:.84rem;padding:8px 12px;border-radius:2px;outline:none;margin-bottom:7px}
+.qg-input:focus{border-color:var(--or)}
+.qg-input::placeholder{color:var(--muted)}
+.qg-btn{width:100%;padding:9px;background:var(--or);color:#fff;border:none;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:background .12s}
+.qg-btn:hover{background:var(--or-dk)}
+#sqr-result{margin-top:10px;display:none}
+#sqr-code{display:flex;justify-content:center;margin-bottom:8px}
+#sqr-code canvas,#sqr-code img{border:6px solid var(--bg);border-radius:2px}
+.sqr-url{font-family:'Barlow Condensed',sans-serif;font-size:.63rem;color:var(--muted);word-break:break-all;background:var(--surf2);padding:7px 10px;border-radius:2px;margin-bottom:8px;border:1px solid var(--border)}
+.sqr-btns{display:flex;gap:7px}
+.sqr-btns button{flex:1;padding:7px;font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;border-radius:2px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all .12s}
+.sqr-btns button:hover{background:var(--surf2)}
+.sqr-btns .dl{background:var(--bl);border-color:var(--bl);color:#fff}
+
+.sfooter{margin-top:auto;padding:14px 18px;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)}
+.rftime{font-family:'Barlow Condensed',sans-serif;font-size:.63rem}
+.rfbtn{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;width:100%;padding:8px;background:var(--border);border:none;border-radius:2px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .12s}
+.rfbtn:hover{background:var(--surf2)}
+.rfbtn.spinning .ri{animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:16px 30px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:var(--surf);flex-wrap:wrap}
+.topbar h2{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;letter-spacing:-.2px}
+.tb-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:7px 16px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.73rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text);transition:all .12s}
+.btn:hover{background:var(--surf2)}
+.btn-or{background:var(--or);border-color:var(--or);color:#fff}
+.btn-or:hover{background:var(--or-dk);background:var(--or-dk)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.stat{background:var(--surf);padding:18px 22px}
+.stat .lbl{font-family:'Barlow Condensed',sans-serif;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.stat .val{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;line-height:1}
+.val.or{color:var(--or)} .val.bl{color:var(--bl)} .val.gr{color:var(--green)} .val.re{color:var(--red)}
+
+/* Filter */
+.fbar{padding:12px 26px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.search{background:var(--surf);border:1px solid var(--border);border-radius:2px;padding:8px 13px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.85rem;outline:none;flex:1;min-width:180px;max-width:280px}
+.search::placeholder{color:var(--muted)}
+.search:focus{border-color:var(--or)}
+.chip{padding:5px 13px;border:1px solid var(--border);border-radius:20px;font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.07em;cursor:pointer;transition:all .11s;color:var(--muted);background:transparent}
+.chip:hover,.chip.on{border-color:var(--or);color:var(--or);background:rgba(232,97,26,.08)}
+.chip.low.on{border-color:var(--green);color:var(--green);background:rgba(39,174,96,.08)}
+.chip.med.on{border-color:var(--yellow);color:var(--yellow);background:rgba(232,160,32,.08)}
+.chip.high.on{border-color:var(--red);color:var(--red);background:rgba(224,48,48,.08)}
+.chip.crit.on{border-color:#e06080;color:#e06080;background:rgba(139,26,42,.15)}
+
+/* Table */
+.twrap{flex:1;overflow:auto;padding:20px 26px}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+thead th{text-align:left;padding:9px 13px;font-family:'Barlow Condensed',sans-serif;font-size:.63rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--text)}
+thead th.srt .sa{color:var(--or);opacity:1}
+.sa{margin-left:3px;opacity:.35}
+tbody tr{border-bottom:1px solid rgba(37,48,80,.5);transition:background .1s;cursor:pointer}
+tbody tr:hover{background:var(--surf2)}
+tbody td{padding:12px 13px;vertical-align:middle;max-width:200px}
+.tdo{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Badges */
+.ubadge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.ubadge.low{background:rgba(39,174,96,.13);color:#4ecf80;border:1px solid rgba(39,174,96,.3)}
+.ubadge.medium{background:rgba(232,160,32,.13);color:#f0b840;border:1px solid rgba(232,160,32,.3)}
+.ubadge.high{background:rgba(232,97,26,.15);color:#f08040;border:1px solid rgba(232,97,26,.3)}
+.ubadge.critical{background:rgba(139,26,42,.28);color:#e06080;border:1px solid rgba(200,40,70,.4)}
+
+.sbadge{display:inline-block;padding:3px 9px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:600;letter-spacing:.06em;cursor:pointer}
+.s-New{background:rgba(232,97,26,.13);color:var(--or);border:1px solid rgba(232,97,26,.3)}
+.s-Reviewing{background:rgba(30,111,165,.13);color:#5090d0;border:1px solid rgba(30,111,165,.3)}
+.s-Active{background:rgba(39,174,96,.13);color:#4ecf80;border:1px solid rgba(39,174,96,.3)}
+.s-Filled{background:rgba(150,150,160,.12);color:#9090a8;border:1px solid rgba(150,150,160,.25)}
+.s-Cancelled{background:rgba(224,48,48,.1);color:#e06060;border:1px solid rgba(224,48,48,.22)}
+
+.cpill{display:inline-block;padding:2px 9px;background:rgba(30,111,165,.1);border:1px solid rgba(30,111,165,.25);border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:600;color:#5090d0;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.empty{text-align:center;padding:70px 20px;color:var(--muted)}
+.empty .ico{font-size:2.2rem;margin-bottom:14px;opacity:.35}
+.empty h3{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:8px;color:var(--text)}
+.empty p{font-size:.85rem;line-height:1.6;max-width:340px;margin:0 auto}
+.swrap{display:flex;justify-content:center;padding:60px}
+.bspin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--or);border-radius:50%;animation:spin .8s linear infinite}
+
+/* Detail Panel */
+.panel{position:fixed;right:0;top:0;bottom:0;width:420px;background:var(--surf);border-left:1px solid var(--border);z-index:100;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+.panel.open{transform:translateX(0)}
+.ph{padding:22px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
+.pclose{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;flex-shrink:0;margin-top:2px}
+.pclose:hover{color:var(--text)}
+.ptitle{font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:-.2px}
+.psub{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;color:var(--muted);margin-top:3px;letter-spacing:.1em}
+.pb{padding:22px;flex:1}
+.pf{margin-bottom:18px}
+.pflbl{font-family:'Barlow Condensed',sans-serif;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.pfval{font-size:.9rem;line-height:1.5;color:var(--text)}
+.pfval.notes{background:var(--surf2);border:1px solid var(--border);border-radius:2px;padding:10px 12px;font-size:.85rem;line-height:1.6;white-space:pre-wrap}
+.pdiv{height:1px;background:var(--border);margin:18px 0}
+.ssel{background:var(--surf2);border:1px solid var(--border);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:600;padding:8px 12px;border-radius:2px;width:100%;outline:none;cursor:pointer;margin-top:6px;-webkit-appearance:none}
+.ssel:focus{border-color:var(--or)}
+.upd-btn{width:100%;margin-top:10px;padding:10px;background:var(--or);color:#fff;border:none;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:opacity .12s}
+.upd-btn:hover{opacity:.85}
+.updmsg{text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.7rem;color:var(--green);margin-top:8px;min-height:18px}
+
+/* Config notice */
+.cfg{background:rgba(232,97,26,.1);border:1px solid rgba(232,97,26,.35);border-radius:3px;padding:13px 18px;font-size:.82rem;color:#e08050;line-height:1.6;margin:20px 26px;display:none}
+.cfg.show{display:block}
+.cfg code{font-family:'Barlow Condensed',monospace;background:rgba(255,255,255,.08);padding:1px 5px;border-radius:2px;font-size:.78rem}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .panel{width:100%}
+  .twrap{padding:12px}
+  .fbar{padding:10px 14px}
+  .topbar{padding:12px 14px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="slogo">
+    <img src="data:image/jpeg;base64,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" alt="Spherion">
+    <div class="slogo-sub">Staffing Dashboard — Admin</div>
+  </div>
+
+  <div class="ssec">Views</div>
+  <div class="nav on" onclick="setView('all',this)"><span class="ico">◈</span> All Requests <span class="nc" id="nAll">–</span></div>
+  <div class="nav" onclick="setView('new',this)"><span class="ico">⊕</span> New <span class="nc hot" id="nNew">–</span></div>
+  <div class="nav" onclick="setView('critical',this)"><span class="ico">⚑</span> Critical / High <span class="nc hot" id="nCrit">–</span></div>
+  <div class="nav" onclick="setView('open',this)"><span class="ico">○</span> Open <span class="nc" id="nOpen">–</span></div>
+  <div class="nav" onclick="setView('filled',this)"><span class="ico">✓</span> Filled <span class="nc" id="nFilled">–</span></div>
+
+  <div class="ssec" style="margin-top:8px">Generate Client QR</div>
+  <div class="qr-gen">
+    <input class="qg-input" id="sqrName" placeholder="Client company name…">
+    <button class="qg-btn" onclick="genSideQR()">Generate QR Code</button>
+    <div id="sqr-result">
+      <div id="sqr-code"></div>
+      <div class="sqr-url" id="sqr-url-box"></div>
+      <div class="sqr-btns">
+        <button onclick="copySide()">Copy</button>
+        <button class="dl" onclick="dlSide()">↓ PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sfooter">
+    <div class="rftime">Last refresh: <span id="rfTime">–</span></div>
+    <button class="rfbtn" id="rfBtn" onclick="loadData()"><span class="ri">↻</span> Refresh Now</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="viewTitle">All Requests</h2>
+    <div class="tb-actions">
+      <button class="btn" onclick="loadData()">↻ Refresh</button>
+      <button class="btn btn-or" onclick="window.open('client-form.html','_blank')">+ New Request</button>
+    </div>
+  </div>
+
+  <div class="cfg show" id="cfgNotice">
+    ⚙ <strong>Setup required:</strong> Paste your Google Apps Script URL into <code>APPS_SCRIPT_URL</code> in both <code>client-form.html</code> and <code>dashboard.html</code>. See <code>SETUP-GUIDE.md</code> for full instructions. Demo data is shown below.
+  </div>
+
+  <div class="stats" id="statsRow">
+    <div class="stat"><div class="lbl">Total Requests</div><div class="val or" id="sTotal">–</div></div>
+    <div class="stat"><div class="lbl">New</div><div class="val or" id="sNew">–</div></div>
+    <div class="stat"><div class="lbl">Critical</div><div class="val re" id="sCrit">–</div></div>
+    <div class="stat"><div class="lbl">High Urgency</div><div class="val" style="color:var(--or)" id="sHigh">–</div></div>
+    <div class="stat"><div class="lbl">Filled</div><div class="val gr" id="sFilled">–</div></div>
+    <div class="stat"><div class="lbl">Clients</div><div class="val bl" id="sClients">–</div></div>
+  </div>
+
+  <div class="fbar">
+    <input type="text" class="search" id="searchIn" placeholder="Search title, client, department, requester…" oninput="renderTable()">
+    <button class="chip on" data-f="" onclick="setChip(this)">All</button>
+    <button class="chip crit" data-f="critical" onclick="setChip(this)">Critical</button>
+    <button class="chip high" data-f="high" onclick="setChip(this)">High</button>
+    <button class="chip med" data-f="medium" onclick="setChip(this)">Medium</button>
+    <button class="chip low" data-f="low" onclick="setChip(this)">Low</button>
+  </div>
+
+  <div class="twrap">
+    <div class="swrap" id="loadWrap"><div class="bspin"></div></div>
+    <div id="tblWrap" style="display:none">
+      <table id="mainTbl">
+        <thead>
+          <tr>
+            <th onclick="sortBy('Timestamp')" class="srt">Date <span class="sa">↓</span></th>
+            <th onclick="sortBy('Client Name')">Client <span class="sa">↕</span></th>
+            <th onclick="sortBy('Job Title')">Job Title <span class="sa">↕</span></th>
+            <th onclick="sortBy('Pay Range')">Pay Range <span class="sa">↕</span></th>
+            <th>HC</th>
+            <th onclick="sortBy('Department / Cost Code')">Dept <span class="sa">↕</span></th>
+            <th onclick="sortBy('Level of Urgency')">Urgency <span class="sa">↕</span></th>
+            <th onclick="sortBy('Status')">Status <span class="sa">↕</span></th>
+            <th onclick="sortBy('Requester Name')">Requester <span class="sa">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="tblBody"></tbody>
+      </table>
+      <div class="empty" id="emptyState" style="display:none">
+        <div class="ico">◈</div>
+        <h3>No requests found</h3>
+        <p>No staffing requests match your current filters, or none have been submitted yet.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Detail Panel -->
+<div class="panel" id="panel">
+  <div class="ph">
+    <div><div class="ptitle" id="panelTitle">—</div><div class="psub" id="panelSub">—</div></div>
+    <button class="pclose" onclick="closePanel()">✕</button>
+  </div>
+  <div class="pb" id="panelBody"></div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL="PASTE_YOUR_APPS_SCRIPT_URL_HERE";
+const FORM_URL="client-form.html";
+
+let allData=[],curView="all",curChip="",sortKey="Timestamp",sortAsc=false;
+
+async function loadData(){
+  const btn=document.getElementById("rfBtn");btn.classList.add("spinning");
+  document.getElementById("loadWrap").style.display="flex";
+  document.getElementById("tblWrap").style.display="none";
+  if(APPS_SCRIPT_URL.includes("PASTE_")){
+    allData=demo();finish();btn.classList.remove("spinning");return;
+  }
+  document.getElementById("cfgNotice").classList.remove("show");
+  try{
+    const r=await fetch(APPS_SCRIPT_URL+"?action=getAll");
+    const j=await r.json();
+    if(j.success)allData=j.data;
+  }catch(e){allData=demo();document.getElementById("cfgNotice").classList.add("show");}
+  finish();btn.classList.remove("spinning");
+}
+
+function finish(){
+  updateStats();renderTable();
+  document.getElementById("loadWrap").style.display="none";
+  document.getElementById("tblWrap").style.display="block";
+  document.getElementById("rfTime").textContent=new Date().toLocaleTimeString();
+}
+
+function updateStats(){
+  const d=allData;
+  document.getElementById("sTotal").textContent=d.length;
+  document.getElementById("sNew").textContent=d.filter(r=>r["Status"]==="New").length;
+  document.getElementById("sCrit").textContent=d.filter(r=>(r["Level of Urgency"]||"").toLowerCase()==="critical").length;
+  document.getElementById("sHigh").textContent=d.filter(r=>(r["Level of Urgency"]||"").toLowerCase()==="high").length;
+  document.getElementById("sFilled").textContent=d.filter(r=>r["Status"]==="Filled").length;
+  document.getElementById("sClients").textContent=new Set(d.map(r=>r["Client Name"]||r["Client ID"])).size;
+  document.getElementById("nAll").textContent=d.length;
+  document.getElementById("nNew").textContent=d.filter(r=>r["Status"]==="New").length;
+  document.getElementById("nCrit").textContent=d.filter(r=>["critical","high"].includes((r["Level of Urgency"]||"").toLowerCase())).length;
+  document.getElementById("nOpen").textContent=d.filter(r=>!["Filled","Cancelled"].includes(r["Status"])).length;
+  document.getElementById("nFilled").textContent=d.filter(r=>r["Status"]==="Filled").length;
+}
+
+function getFilt(){
+  let data=[...allData];
+  if(curView==="new")data=data.filter(r=>r["Status"]==="New");
+  else if(curView==="critical")data=data.filter(r=>["critical","high"].includes((r["Level of Urgency"]||"").toLowerCase()));
+  else if(curView==="open")data=data.filter(r=>!["Filled","Cancelled"].includes(r["Status"]));
+  else if(curView==="filled")data=data.filter(r=>r["Status"]==="Filled");
+  if(curChip)data=data.filter(r=>(r["Level of Urgency"]||"").toLowerCase()===curChip);
+  const q=document.getElementById("searchIn").value.toLowerCase();
+  if(q)data=data.filter(r=>["Job Title","Client Name","Department / Cost Code","Requester Name","Requester Email","Request ID"].some(k=>(r[k]||"").toLowerCase().includes(q)));
+  data.sort((a,b)=>{
+    let va=a[sortKey]||"",vb=b[sortKey]||"";
+    if(sortKey==="Timestamp"){va=new Date(va);vb=new Date(vb);}
+    return va<vb?(sortAsc?-1:1):va>vb?(sortAsc?1:-1):0;
+  });
+  return data;
+}
+
+function renderTable(){
+  const data=getFilt(),tbody=document.getElementById("tblBody"),empty=document.getElementById("emptyState");
+  tbody.innerHTML="";
+  if(!data.length){empty.style.display="block";return;}
+  empty.style.display="none";
+  data.forEach(row=>{
+    const tr=document.createElement("tr");
+    const urg=(row["Level of Urgency"]||"").toLowerCase();
+    const status=row["Status"]||"New";
+    const ts=row["Timestamp"]?new Date(row["Timestamp"]).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"}):"—";
+    tr.innerHTML=`<td style="font-family:'Barlow Condensed',sans-serif;font-size:.72rem;color:var(--muted);white-space:nowrap">${ts}</td>
+      <td><span class="cpill">${esc(row["Client Name"]||row["Client ID"]||"—")}</span></td>
+      <td class="tdo" style="max-width:180px;font-weight:600">${esc(row["Job Title"]||"—")}</td>
+      <td style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;white-space:nowrap">${esc(row["Pay Range"]||"—")}</td>
+      <td style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.84rem">${row["Headcount"]||"—"}</td>
+      <td class="tdo" style="max-width:140px;font-size:.82rem;color:var(--muted)">${esc(row["Department / Cost Code"]||"—")}</td>
+      <td><span class="ubadge ${urg}">${urg||"—"}</span></td>
+      <td><span class="sbadge s-${status.replace(/\s/g,"")}" onclick="openStatusQ(event,'${ea(row["Request ID"])}')">${status}</span></td>
+      <td class="tdo" style="max-width:140px;font-size:.82rem;color:var(--muted)">${esc(row["Requester Name"]||"—")}</td>`;
+    tr.onclick=()=>openPanel(row);tbody.appendChild(tr);
+  });
+}
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function ea(s){return String(s).replace(/"/g,"&quot;")}
+
+function setView(v,el){
+  curView=v;
+  document.querySelectorAll(".nav").forEach(n=>n.classList.remove("on"));
+  el.classList.add("on");
+  const titles={all:"All Requests",new:"New Requests",critical:"Critical & High Urgency",open:"Open Requests",filled:"Filled Positions"};
+  document.getElementById("viewTitle").textContent=titles[v]||"Requests";
+  renderTable();
+}
+function setChip(el){
+  curChip=el.dataset.f;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+  el.classList.add("on");renderTable();
+}
+function sortBy(k){
+  if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=true;}
+  document.querySelectorAll("thead th").forEach(th=>{th.classList.remove("srt");const s=th.querySelector(".sa");if(s)s.textContent="↕";});
+  document.querySelectorAll("thead th").forEach(th=>{if(th.getAttribute("onclick")&&th.getAttribute("onclick").includes(k)){th.classList.add("srt");const s=th.querySelector(".sa");if(s)s.textContent=sortAsc?"↑":"↓";}});
+  renderTable();
+}
+
+function openPanel(row){
+  const p=document.getElementById("panel");
+  document.getElementById("panelTitle").textContent=row["Job Title"]||"—";
+  document.getElementById("panelSub").textContent=(row["Request ID"]||"—")+" · "+(row["Client Name"]||row["Client ID"]||"—");
+  const urg=(row["Level of Urgency"]||"").toLowerCase();
+  const ts=row["Timestamp"]?new Date(row["Timestamp"]).toLocaleString():"—";
+  document.getElementById("panelBody").innerHTML=`
+    <div class="pf"><div class="pflbl">Client</div><div class="pfval"><span class="cpill">${esc(row["Client Name"]||row["Client ID"]||"—")}</span></div></div>
+    <div class="pf"><div class="pflbl">Submitted</div><div class="pfval">${ts}</div></div>
+    <div class="pf"><div class="pflbl">Pay Range</div><div class="pfval" style="font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:600">${esc(row["Pay Range"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Headcount Needed</div><div class="pfval">${row["Headcount"]||"—"}</div></div>
+    <div class="pf"><div class="pflbl">Department / Cost Code</div><div class="pfval">${esc(row["Department / Cost Code"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Employment Type</div><div class="pfval">${esc(row["Employment Type"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Urgency</div><div class="pfval"><span class="ubadge ${urg}">${urg||"—"}</span></div></div>
+    <div class="pf"><div class="pflbl">Target Start Date</div><div class="pfval">${esc(row["Target Start Date"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Hiring Manager</div><div class="pfval">${esc(row["Hiring Manager"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Notes / Description</div><div class="pfval notes">${esc(row["Notes / Description"]||"—")}</div></div>
+    <div class="pdiv"></div>
+    <div class="pf"><div class="pflbl">Requester</div><div class="pfval">${esc(row["Requester Name"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Email</div><div class="pfval" style="font-size:.85rem">${esc(row["Requester Email"]||"—")}</div></div>
+    <div class="pdiv"></div>
+    <div class="pf">
+      <div class="pflbl">Update Status</div>
+      <select class="ssel" id="pSelStatus">
+        ${["New","Reviewing","Active","Filled","Cancelled"].map(s=>`<option value="${s}"${row["Status"]===s?" selected":""}>${s}</option>`).join("")}
+      </select>
+      <button class="upd-btn" onclick="updateStatus('${ea(row["Request ID"])}')">Save Status to Sheet</button>
+      <div class="updmsg" id="updMsg"></div>
+    </div>`;
+  p.classList.add("open");
+}
+function closePanel(){document.getElementById("panel").classList.remove("open")}
+function openStatusQ(e,rid){e.stopPropagation();const row=allData.find(r=>r["Request ID"]===rid);if(row)openPanel(row)}
+
+async function updateStatus(rid){
+  const status=document.getElementById("pSelStatus").value;
+  const msg=document.getElementById("updMsg");
+  msg.textContent="Saving…";msg.style.color="var(--muted)";
+  if(APPS_SCRIPT_URL.includes("PASTE_")){
+    const row=allData.find(r=>r["Request ID"]===rid);if(row)row["Status"]=status;
+    msg.textContent="✓ Updated (demo mode)";msg.style.color="var(--green)";
+    updateStats();renderTable();return;
+  }
+  try{
+    const r=await fetch(APPS_SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"updateStatus",requestId:rid,status})});
+    const j=await r.json();
+    if(j.success){const row=allData.find(r=>r["Request ID"]===rid);if(row)row["Status"]=status;msg.textContent="✓ Saved to Google Sheet";msg.style.color="var(--green)";updateStats();renderTable();}
+    else{msg.textContent="Error: "+j.error;msg.style.color="var(--or)";}
+  }catch(e){msg.textContent="Network error";msg.style.color="var(--or)";}
+}
+
+// Sidebar QR
+let sideQrBuilt=false;let sideQrUrl="";
+function genSideQR(){
+  const name=document.getElementById("sqrName").value.trim();if(!name)return;
+  const id=name.toLowerCase().replace(/[^a-z0-9]/g,"-").replace(/-+/g,"-");
+  const base=location.origin+location.pathname.replace("dashboard.html","")+"client-form.html";
+  sideQrUrl=`${base}?client=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`;
+  document.getElementById("sqr-url-box").textContent=sideQrUrl;
+  document.getElementById("sqr-result").style.display="block";
+  const cont=document.getElementById("sqr-code");cont.innerHTML="";
+  new QRCode(cont,{text:sideQrUrl,width:160,height:160,colorDark:"#0e1520",colorLight:"#f6f7f9",correctLevel:QRCode.CorrectLevel.H});
+  sideQrBuilt=true;
+}
+function copySide(){navigator.clipboard.writeText(sideQrUrl).then(()=>{const b=event.target;b.textContent="Copied!";setTimeout(()=>b.textContent="Copy",2000)})}
+function dlSide(){const c=document.querySelector("#sqr-code canvas");if(!c)return;const a=document.createElement("a");const n=document.getElementById("sqrName").value.trim();a.download="spherion-qr-"+n.replace(/\s+/g,"-")+".png";a.href=c.toDataURL();a.click()}
+
+function demo(){return[
+  {"Timestamp":new Date(Date.now()-3600000).toISOString(),"Request ID":"SR-DEMO001","Client ID":"acme-corp","Client Name":"Acme Corp","Job Title":"Warehouse Associate","Pay Range":"$17–$21/hr","Headcount":5,"Department / Cost Code":"Operations — CC-2100","Employment Type":"Temp-to-Perm","Level of Urgency":"critical","Target Start Date":"2025-06-01","Hiring Manager":"Jane Smith","Notes / Description":"2nd shift 3pm–11pm. Steel-toed boots required. Forklift cert a plus.","Requester Name":"Bob Johnson","Requester Email":"bob@acme.com","Status":"New","Last Updated":new Date().toISOString()},
+  {"Timestamp":new Date(Date.now()-7200000).toISOString(),"Request ID":"SR-DEMO002","Client ID":"globex-inc","Client Name":"Globex Inc","Job Title":"Staff Accountant","Pay Range":"$65K–$80K","Headcount":1,"Department / Cost Code":"Finance — CC-3300","Employment Type":"Full-Time","Level of Urgency":"high","Target Start Date":"2025-07-15","Hiring Manager":"Alice Brown","Notes / Description":"CPA preferred. QuickBooks & NetSuite experience.","Requester Name":"Carol White","Requester Email":"carol@globex.com","Status":"Reviewing","Last Updated":new Date().toISOString()},
+  {"Timestamp":new Date(Date.now()-86400000).toISOString(),"Request ID":"SR-DEMO003","Client ID":"acme-corp","Client Name":"Acme Corp","Job Title":"CNC Machinist","Pay Range":"$22–$28/hr","Headcount":3,"Department / Cost Code":"Manufacturing — CC-1010","Employment Type":"Contract","Level of Urgency":"medium","Target Start Date":"2025-08-01","Hiring Manager":"Dave Lee","Notes / Description":"Haas or Mazak experience required. 1st shift.","Requester Name":"Eve Davis","Requester Email":"eve@acme.com","Status":"Active","Last Updated":new Date().toISOString()},
+  {"Timestamp":new Date(Date.now()-172800000).toISOString(),"Request ID":"SR-DEMO004","Client ID":"initech","Client Name":"Initech","Job Title":"HR Generalist","Pay Range":"$55K–$70K","Headcount":1,"Department / Cost Code":"HR — CC-5500","Employment Type":"Full-Time","Level of Urgency":"low","Target Start Date":"","Hiring Manager":"","Notes / Description":"","Requester Name":"Frank Miller","Requester Email":"frank@initech.com","Status":"Filled","Last Updated":new Date().toISOString()},
+  {"Timestamp":new Date(Date.now()-259200000).toISOString(),"Request ID":"SR-DEMO005","Client ID":"globex-inc","Client Name":"Globex Inc","Job Title":"IT Help Desk Technician","Pay Range":"$20–$24/hr","Headcount":2,"Department / Cost Code":"IT — CC-4400","Employment Type":"Contract-to-Hire","Level of Urgency":"high","Target Start Date":"2025-05-20","Hiring Manager":"Grace Kim","Notes / Description":"CompTIA A+ preferred. Windows 11 support environment.","Requester Name":"Hank Wilson","Requester Email":"hank@globex.com","Status":"New","Last Updated":new Date().toISOString()},
+];}
+
+setInterval(()=>{if(!APPS_SCRIPT_URL.includes("PASTE_"))loadData();},60000);
+loadData();
+</script>
+</body>
+</html>
