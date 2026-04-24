@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spherion — Staffing Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --or:#E8611A;--or-dk:#c45114;
+  --bl:#1E6FA5;--bl-dk:#165a88;
+  --bg:#0e1520;--surf:#141d2e;--surf2:#1a2440;
+  --border:#253050;--text:#dde4f0;--muted:#6a7898;
+  --green:#27ae60;--yellow:#e8a020;--red:#e03030;--crit:#8b1a2a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.layout{display:flex;min-height:100vh}
+
+/* Sidebar */
+.sidebar{width:248px;background:var(--surf);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.slogo{padding:20px 22px 18px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:10px}
+.slogo img{height:30px;width:auto;filter:brightness(0) invert(1)}
+.slogo-sub{font-family:'Barlow Condensed',sans-serif;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.ssec{padding:18px 16px 6px;font-family:'Barlow Condensed',sans-serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:.87rem;color:var(--muted);cursor:pointer;border-left:3px solid transparent;transition:all .12s}
+.nav:hover{background:var(--surf2);color:var(--text)}
+.nav.on{background:var(--surf2);color:var(--text);border-left-color:var(--or)}
+.nav .ico{width:16px;text-align:center;font-size:.88rem}
+.nc{margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;background:var(--border);padding:2px 8px;border-radius:20px;color:var(--muted)}
+.nc.hot{background:rgba(232,97,26,.2);color:var(--or)}
+
+.qr-gen{padding:14px 16px 16px}
+.qr-gen-lbl{font-family:'Barlow Condensed',sans-serif;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.qg-input{width:100%;background:var(--surf2);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:.84rem;padding:8px 12px;border-radius:2px;outline:none;margin-bottom:7px}
+.qg-input:focus{border-color:var(--or)}
+.qg-input::placeholder{color:var(--muted)}
+.qg-btn{width:100%;padding:9px;background:var(--or);color:#fff;border:none;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:background .12s}
+.qg-btn:hover{background:var(--or-dk)}
+#sqr-result{margin-top:10px;display:none}
+#sqr-code{display:flex;justify-content:center;margin-bottom:8px}
+#sqr-code canvas,#sqr-code img{border:6px solid var(--bg);border-radius:2px}
+.sqr-url{font-family:'Barlow Condensed',sans-serif;font-size:.63rem;color:var(--muted);word-break:break-all;background:var(--surf2);padding:7px 10px;border-radius:2px;margin-bottom:8px;border:1px solid var(--border)}
+.sqr-btns{display:flex;gap:7px}
+.sqr-btns button{flex:1;padding:7px;font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;border-radius:2px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all .12s}
+.sqr-btns button:hover{background:var(--surf2)}
+.sqr-btns .dl{background:var(--bl);border-color:var(--bl);color:#fff}
+
+.sfooter{margin-top:auto;padding:14px 18px;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)}
+.rftime{font-family:'Barlow Condensed',sans-serif;font-size:.63rem}
+.rfbtn{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;width:100%;padding:8px;background:var(--border);border:none;border-radius:2px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .12s}
+.rfbtn:hover{background:var(--surf2)}
+.rfbtn.spinning .ri{animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:16px 30px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:var(--surf);flex-wrap:wrap}
+.topbar h2{font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:700;letter-spacing:-.2px}
+.tb-actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:7px 16px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.73rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text);transition:all .12s}
+.btn:hover{background:var(--surf2)}
+.btn-or{background:var(--or);border-color:var(--or);color:#fff}
+.btn-or:hover{background:var(--or-dk);background:var(--or-dk)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.stat{background:var(--surf);padding:18px 22px}
+.stat .lbl{font-family:'Barlow Condensed',sans-serif;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.stat .val{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;line-height:1}
+.val.or{color:var(--or)} .val.bl{color:var(--bl)} .val.gr{color:var(--green)} .val.re{color:var(--red)}
+
+/* Filter */
+.fbar{padding:12px 26px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.search{background:var(--surf);border:1px solid var(--border);border-radius:2px;padding:8px 13px;color:var(--text);font-family:'Barlow',sans-serif;font-size:.85rem;outline:none;flex:1;min-width:180px;max-width:280px}
+.search::placeholder{color:var(--muted)}
+.search:focus{border-color:var(--or)}
+.chip{padding:5px 13px;border:1px solid var(--border);border-radius:20px;font-family:'Barlow Condensed',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.07em;cursor:pointer;transition:all .11s;color:var(--muted);background:transparent}
+.chip:hover,.chip.on{border-color:var(--or);color:var(--or);background:rgba(232,97,26,.08)}
+.chip.low.on{border-color:var(--green);color:var(--green);background:rgba(39,174,96,.08)}
+.chip.med.on{border-color:var(--yellow);color:var(--yellow);background:rgba(232,160,32,.08)}
+.chip.high.on{border-color:var(--red);color:var(--red);background:rgba(224,48,48,.08)}
+.chip.crit.on{border-color:#e06080;color:#e06080;background:rgba(139,26,42,.15)}
+
+/* Table */
+.twrap{flex:1;overflow:auto;padding:20px 26px}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+thead th{text-align:left;padding:9px 13px;font-family:'Barlow Condensed',sans-serif;font-size:.63rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--text)}
+thead th.srt .sa{color:var(--or);opacity:1}
+.sa{margin-left:3px;opacity:.35}
+tbody tr{border-bottom:1px solid rgba(37,48,80,.5);transition:background .1s;cursor:pointer}
+tbody tr:hover{background:var(--surf2)}
+tbody td{padding:12px 13px;vertical-align:middle;max-width:200px}
+.tdo{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Badges */
+.ubadge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.ubadge.low{background:rgba(39,174,96,.13);color:#4ecf80;border:1px solid rgba(39,174,96,.3)}
+.ubadge.medium{background:rgba(232,160,32,.13);color:#f0b840;border:1px solid rgba(232,160,32,.3)}
+.ubadge.high{background:rgba(232,97,26,.15);color:#f08040;border:1px solid rgba(232,97,26,.3)}
+.ubadge.critical{background:rgba(139,26,42,.28);color:#e06080;border:1px solid rgba(200,40,70,.4)}
+
+.sbadge{display:inline-block;padding:3px 9px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:600;letter-spacing:.06em;cursor:pointer}
+.s-New{background:rgba(232,97,26,.13);color:var(--or);border:1px solid rgba(232,97,26,.3)}
+.s-Reviewing{background:rgba(30,111,165,.13);color:#5090d0;border:1px solid rgba(30,111,165,.3)}
+.s-Active{background:rgba(39,174,96,.13);color:#4ecf80;border:1px solid rgba(39,174,96,.3)}
+.s-Filled{background:rgba(150,150,160,.12);color:#9090a8;border:1px solid rgba(150,150,160,.25)}
+.s-Cancelled{background:rgba(224,48,48,.1);color:#e06060;border:1px solid rgba(224,48,48,.22)}
+
+.cpill{display:inline-block;padding:2px 9px;background:rgba(30,111,165,.1);border:1px solid rgba(30,111,165,.25);border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.65rem;font-weight:600;color:#5090d0;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.empty{text-align:center;padding:70px 20px;color:var(--muted)}
+.empty .ico{font-size:2.2rem;margin-bottom:14px;opacity:.35}
+.empty h3{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:8px;color:var(--text)}
+.empty p{font-size:.85rem;line-height:1.6;max-width:340px;margin:0 auto}
+.swrap{display:flex;justify-content:center;padding:60px}
+.bspin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--or);border-radius:50%;animation:spin .8s linear infinite}
+
+/* Detail Panel */
+.panel{position:fixed;right:0;top:0;bottom:0;width:420px;background:var(--surf);border-left:1px solid var(--border);z-index:100;transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+.panel.open{transform:translateX(0)}
+.ph{padding:22px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
+.pclose{background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer;flex-shrink:0;margin-top:2px}
+.pclose:hover{color:var(--text)}
+.ptitle{font-family:'Barlow Condensed',sans-serif;font-size:1.15rem;font-weight:700;letter-spacing:-.2px}
+.psub{font-family:'Barlow Condensed',sans-serif;font-size:.65rem;color:var(--muted);margin-top:3px;letter-spacing:.1em}
+.pb{padding:22px;flex:1}
+.pf{margin-bottom:18px}
+.pflbl{font-family:'Barlow Condensed',sans-serif;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.pfval{font-size:.9rem;line-height:1.5;color:var(--text)}
+.pfval.notes{background:var(--surf2);border:1px solid var(--border);border-radius:2px;padding:10px 12px;font-size:.85rem;line-height:1.6;white-space:pre-wrap}
+.pdiv{height:1px;background:var(--border);margin:18px 0}
+.ssel{background:var(--surf2);border:1px solid var(--border);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:.82rem;font-weight:600;padding:8px 12px;border-radius:2px;width:100%;outline:none;cursor:pointer;margin-top:6px;-webkit-appearance:none}
+.ssel:focus{border-color:var(--or)}
+.upd-btn{width:100%;margin-top:10px;padding:10px;background:var(--or);color:#fff;border:none;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:opacity .12s}
+.upd-btn:hover{opacity:.85}
+.updmsg{text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.7rem;color:var(--green);margin-top:8px;min-height:18px}
+
+/* Config notice */
+.cfg{background:rgba(232,97,26,.1);border:1px solid rgba(232,97,26,.35);border-radius:3px;padding:13px 18px;font-size:.82rem;color:#e08050;line-height:1.6;margin:20px 26px;display:none}
+.cfg.show{display:block}
+.cfg code{font-family:'Barlow Condensed',monospace;background:rgba(255,255,255,.08);padding:1px 5px;border-radius:2px;font-size:.78rem}
+
+@media(max-width:768px){
+  .sidebar{display:none}
+  .panel{width:100%}
+  .twrap{padding:12px}
+  .fbar{padding:10px 14px}
+  .topbar{padding:12px 14px}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="slogo">
+    <img src="logo.png" alt="Spherion">
+    <div class="slogo-sub">Staffing Dashboard — Admin</div>
+  </div>
+
+  <div class="ssec">Views</div>
+  <div class="nav on" onclick="setView('all',this)"><span class="ico">◈</span> All Requests <span class="nc" id="nAll">–</span></div>
+  <div class="nav" onclick="setView('new',this)"><span class="ico">⊕</span> New <span class="nc hot" id="nNew">–</span></div>
+  <div class="nav" onclick="setView('critical',this)"><span class="ico">⚑</span> Critical / High <span class="nc hot" id="nCrit">–</span></div>
+  <div class="nav" onclick="setView('open',this)"><span class="ico">○</span> Open <span class="nc" id="nOpen">–</span></div>
+  <div class="nav" onclick="setView('filled',this)"><span class="ico">✓</span> Filled <span class="nc" id="nFilled">–</span></div>
+
+  <div class="ssec" style="margin-top:8px">Generate Client QR</div>
+  <div class="qr-gen">
+    <input class="qg-input" id="sqrName" placeholder="Client company name…">
+    <button class="qg-btn" onclick="genSideQR()">Generate QR Code</button>
+    <div id="sqr-result">
+      <div id="sqr-code"></div>
+      <div class="sqr-url" id="sqr-url-box"></div>
+      <div class="sqr-btns">
+        <button onclick="copySide()">Copy</button>
+        <button class="dl" onclick="dlSide()">↓ PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sfooter">
+    <div class="rftime">Last refresh: <span id="rfTime">–</span></div>
+    <button class="rfbtn" id="rfBtn" onclick="loadData()"><span class="ri">↻</span> Refresh Now</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="viewTitle">All Requests</h2>
+    <div class="tb-actions">
+      <button class="btn" onclick="loadData()">↻ Refresh</button>
+      <button class="btn btn-or" onclick="window.open('client-form.html','_blank')">+ New Request</button>
+    </div>
+  </div>
+
+  <div class="cfg show" id="cfgNotice">
+    ⚙ <strong>Setup required:</strong> Paste your Google Apps Script URL into <code>APPS_SCRIPT_URL</code> in both <code>client-form.html</code> and <code>dashboard.html</code>. See <code>SETUP-GUIDE.md</code> for full instructions. Demo data is shown below.
+  </div>
+
+  <div class="stats" id="statsRow">
+    <div class="stat"><div class="lbl">Total Requests</div><div class="val or" id="sTotal">–</div></div>
+    <div class="stat"><div class="lbl">New</div><div class="val or" id="sNew">–</div></div>
+    <div class="stat"><div class="lbl">Critical</div><div class="val re" id="sCrit">–</div></div>
+    <div class="stat"><div class="lbl">High Urgency</div><div class="val" style="color:var(--or)" id="sHigh">–</div></div>
+    <div class="stat"><div class="lbl">Filled</div><div class="val gr" id="sFilled">–</div></div>
+    <div class="stat"><div class="lbl">Clients</div><div class="val bl" id="sClients">–</div></div>
+  </div>
+
+  <div class="fbar">
+    <input type="text" class="search" id="searchIn" placeholder="Search title, client, department, requester…" oninput="renderTable()">
+    <button class="chip on" data-f="" onclick="setChip(this)">All</button>
+    <button class="chip crit" data-f="critical" onclick="setChip(this)">Critical</button>
+    <button class="chip high" data-f="high" onclick="setChip(this)">High</button>
+    <button class="chip med" data-f="medium" onclick="setChip(this)">Medium</button>
+    <button class="chip low" data-f="low" onclick="setChip(this)">Low</button>
+  </div>
+
+  <div class="twrap">
+    <div class="swrap" id="loadWrap"><div class="bspin"></div></div>
+    <div id="tblWrap" style="display:none">
+      <table id="mainTbl">
+        <thead>
+          <tr>
+            <th onclick="sortBy('Timestamp')" class="srt">Date <span class="sa">↓</span></th>
+            <th onclick="sortBy('Client Name')">Client <span class="sa">↕</span></th>
+            <th onclick="sortBy('Job Title')">Job Title <span class="sa">↕</span></th>
+            <th onclick="sortBy('Pay Range')">Pay Range <span class="sa">↕</span></th>
+            <th>HC</th>
+            <th onclick="sortBy('Department / Cost Code')">Dept <span class="sa">↕</span></th>
+            <th onclick="sortBy('Level of Urgency')">Urgency <span class="sa">↕</span></th>
+            <th onclick="sortBy('Status')">Status <span class="sa">↕</span></th>
+            <th onclick="sortBy('Requester Name')">Requester <span class="sa">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="tblBody"></tbody>
+      </table>
+      <div class="empty" id="emptyState" style="display:none">
+        <div class="ico">◈</div>
+        <h3>No requests found</h3>
+        <p>No staffing requests match your current filters, or none have been submitted yet.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Detail Panel -->
+<div class="panel" id="panel">
+  <div class="ph">
+    <div><div class="ptitle" id="panelTitle">—</div><div class="psub" id="panelSub">—</div></div>
+    <button class="pclose" onclick="closePanel()">✕</button>
+  </div>
+  <div class="pb" id="panelBody"></div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL="PASTE_YOUR_APPS_SCRIPT_URL_HERE";
+const FORM_URL="client-form.html";
+
+let allData=[],curView="all",curChip="",sortKey="Timestamp",sortAsc=false;
+
+async function loadData(){
+  const btn=document.getElementById("rfBtn");btn.classList.add("spinning");
+  document.getElementById("loadWrap").style.display="flex";
+  document.getElementById("tblWrap").style.display="none";
+  if(APPS_SCRIPT_URL.includes("PASTE_")){
+    allData=demo();finish();btn.classList.remove("spinning");return;
+  }
+  document.getElementById("cfgNotice").classList.remove("show");
+  try{
+    const r=await fetch(APPS_SCRIPT_URL+"?action=getAll");
+    const j=await r.json();
+    if(j.success)allData=j.data;
+  }catch(e){allData=demo();document.getElementById("cfgNotice").classList.add("show");}
+  finish();btn.classList.remove("spinning");
+}
+
+function finish(){
+  updateStats();renderTable();
+  document.getElementById("loadWrap").style.display="none";
+  document.getElementById("tblWrap").style.display="block";
+  document.getElementById("rfTime").textContent=new Date().toLocaleTimeString();
+}
+
+function updateStats(){
+  const d=allData;
+  document.getElementById("sTotal").textContent=d.length;
+  document.getElementById("sNew").textContent=d.filter(r=>r["Status"]==="New").length;
+  document.getElementById("sCrit").textContent=d.filter(r=>(r["Level of Urgency"]||"").toLowerCase()==="critical").length;
+  document.getElementById("sHigh").textContent=d.filter(r=>(r["Level of Urgency"]||"").toLowerCase()==="high").length;
+  document.getElementById("sFilled").textContent=d.filter(r=>r["Status"]==="Filled").length;
+  document.getElementById("sClients").textContent=new Set(d.map(r=>r["Client Name"]||r["Client ID"])).size;
+  document.getElementById("nAll").textContent=d.length;
+  document.getElementById("nNew").textContent=d.filter(r=>r["Status"]==="New").length;
+  document.getElementById("nCrit").textContent=d.filter(r=>["critical","high"].includes((r["Level of Urgency"]||"").toLowerCase())).length;
+  document.getElementById("nOpen").textContent=d.filter(r=>!["Filled","Cancelled"].includes(r["Status"])).length;
+  document.getElementById("nFilled").textContent=d.filter(r=>r["Status"]==="Filled").length;
+}
+
+function getFilt(){
+  let data=[...allData];
+  if(curView==="new")data=data.filter(r=>r["Status"]==="New");
+  else if(curView==="critical")data=data.filter(r=>["critical","high"].includes((r["Level of Urgency"]||"").toLowerCase()));
+  else if(curView==="open")data=data.filter(r=>!["Filled","Cancelled"].includes(r["Status"]));
+  else if(curView==="filled")data=data.filter(r=>r["Status"]==="Filled");
+  if(curChip)data=data.filter(r=>(r["Level of Urgency"]||"").toLowerCase()===curChip);
+  const q=document.getElementById("searchIn").value.toLowerCase();
+  if(q)data=data.filter(r=>["Job Title","Client Name","Department / Cost Code","Requester Name","Requester Email","Request ID"].some(k=>(r[k]||"").toLowerCase().includes(q)));
+  data.sort((a,b)=>{
+    let va=a[sortKey]||"",vb=b[sortKey]||"";
+    if(sortKey==="Timestamp"){va=new Date(va);vb=new Date(vb);}
+    return va<vb?(sortAsc?-1:1):va>vb?(sortAsc?1:-1):0;
+  });
+  return data;
+}
+
+function renderTable(){
+  const data=getFilt(),tbody=document.getElementById("tblBody"),empty=document.getElementById("emptyState");
+  tbody.innerHTML="";
+  if(!data.length){empty.style.display="block";return;}
+  empty.style.display="none";
+  data.forEach(row=>{
+    const tr=document.createElement("tr");
+    const urg=(row["Level of Urgency"]||"").toLowerCase();
+    const status=row["Status"]||"New";
+    const ts=row["Timestamp"]?new Date(row["Timestamp"]).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"}):"—";
+    tr.innerHTML=`<td style="font-family:'Barlow Condensed',sans-serif;font-size:.72rem;color:var(--muted);white-space:nowrap">${ts}</td>
+      <td><span class="cpill">${esc(row["Client Name"]||row["Client ID"]||"—")}</span></td>
+      <td class="tdo" style="max-width:180px;font-weight:600">${esc(row["Job Title"]||"—")}</td>
+      <td style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;white-space:nowrap">${esc(row["Pay Range"]||"—")}</td>
+      <td style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:.84rem">${row["Headcount"]||"—"}</td>
+      <td class="tdo" style="max-width:140px;font-size:.82rem;color:var(--muted)">${esc(row["Department / Cost Code"]||"—")}</td>
+      <td><span class="ubadge ${urg}">${urg||"—"}</span></td>
+      <td><span class="sbadge s-${status.replace(/\s/g,"")}" onclick="openStatusQ(event,'${ea(row["Request ID"])}')">${status}</span></td>
+      <td class="tdo" style="max-width:140px;font-size:.82rem;color:var(--muted)">${esc(row["Requester Name"]||"—")}</td>`;
+    tr.onclick=()=>openPanel(row);tbody.appendChild(tr);
+  });
+}
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function ea(s){return String(s).replace(/"/g,"&quot;")}
+
+function setView(v,el){
+  curView=v;
+  document.querySelectorAll(".nav").forEach(n=>n.classList.remove("on"));
+  el.classList.add("on");
+  const titles={all:"All Requests",new:"New Requests",critical:"Critical & High Urgency",open:"Open Requests",filled:"Filled Positions"};
+  document.getElementById("viewTitle").textContent=titles[v]||"Requests";
+  renderTable();
+}
+function setChip(el){
+  curChip=el.dataset.f;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+  el.classList.add("on");renderTable();
+}
+function sortBy(k){
+  if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=true;}
+  document.querySelectorAll("thead th").forEach(th=>{th.classList.remove("srt");const s=th.querySelector(".sa");if(s)s.textContent="↕";});
+  document.querySelectorAll("thead th").forEach(th=>{if(th.getAttribute("onclick")&&th.getAttribute("onclick").includes(k)){th.classList.add("srt");const s=th.querySelector(".sa");if(s)s.textContent=sortAsc?"↑":"↓";}});
+  renderTable();
+}
+
+function openPanel(row){
+  const p=document.getElementById("panel");
+  document.getElementById("panelTitle").textContent=row["Job Title"]||"—";
+  document.getElementById("panelSub").textContent=(row["Request ID"]||"—")+" · "+(row["Client Name"]||row["Client ID"]||"—");
+  const urg=(row["Level of Urgency"]||"").toLowerCase();
+  const ts=row["Timestamp"]?new Date(row["Timestamp"]).toLocaleString():"—";
+  document.getElementById("panelBody").innerHTML=`
+    <div class="pf"><div class="pflbl">Client</div><div class="pfval"><span class="cpill">${esc(row["Client Name"]||row["Client ID"]||"—")}</span></div></div>
+    <div class="pf"><div class="pflbl">Submitted</div><div class="pfval">${ts}</div></div>
+    <div class="pf"><div class="pflbl">Pay Range</div><div class="pfval" style="font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:600">${esc(row["Pay Range"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Headcount Needed</div><div class="pfval">${row["Headcount"]||"—"}</div></div>
+    <div class="pf"><div class="pflbl">Department / Cost Code</div><div class="pfval">${esc(row["Department / Cost Code"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Employment Type</div><div class="pfval">${esc(row["Employment Type"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Urgency</div><div class="pfval"><span class="ubadge ${urg}">${urg||"—"}</span></div></div>
+    <div class="pf"><div class="pflbl">Target Start Date</div><div class="pfval">${esc(row["Target Start Date"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Hiring Manager</div><div class="pfval">${esc(row["Hiring Manager"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Notes / Description</div><div class="pfval notes">${esc(row["Notes / Description"]||"—")}</div></div>
+    <div class="pdiv"></div>
+    <div class="pf"><div class="pflbl">Requester</div><div class="pfval">${esc(row["Requester Name"]||"—")}</div></div>
+    <div class="pf"><div class="pflbl">Email</div><div class="pfval" style="font-size:.85rem">${esc(row["Requester Email"]||"—")}</div></div>
+    <div class="pdiv"></div>
+    <div class="pf">
+      <div class="pflbl">Update Status</div>
+      <select class="ssel" id="pSelStatus">
+        ${["New","Reviewing","Active","Filled","Cancelled"].map(s=>`<option value="${s}"${row["Status"]===s?" selected":""}>${s}</option>`).join("")}
+      </select>
+      <button class="upd-btn" onclick="updateStatus('${ea(row["Request ID"])}')">Save Status to Sheet</button>
+      <div class="updmsg" id="updMsg"></div>
+    </div>`;
+  p.classList.add("open");
+}
+function closePanel(){document.getElementById("panel").classList.remove("open")}
+function openStatusQ(e,rid){e.stopPropagation();const row=allData.find(r=>r["Request ID"]===rid);if(row)openPanel(row)}
+
+async function updateStatus(rid){
+  const status=document.getElementById("pSelStatus").value;
+  const msg=document.getElementById("updMsg");
+  msg.textContent="Saving…";msg.style.color="var(--muted)";
+  if(APPS_SCRIPT_URL.includes("PASTE_")){
+    const row=allData.find(r=>r["Request ID"]===rid);if(row)row["Status"]=status;
+    msg.textContent="✓ Updated (demo mode)";msg.style.color="var(--green)";
+    updateStats();renderTable();return;
+  }
+  try{
+    const params=new URLSearchParams({action:"updateStatus",requestId:rid,status});
+    const r=await fetch(APPS_SCRIPT_URL+"?"+params.toString());
+    const j=await r.json();
+    if(j.success){const row=allData.find(r=>r["Request ID"]===rid);if(row)row["Status"]=status;msg.textContent="✓ Saved to Google Sheet";msg.style.color="var(--green)";updateStats();renderTable();}
+    else{msg.textContent="Error: "+j.error;msg.style.color="var(--or)";}
+  }catch(e){msg.textContent="Network error";msg.style.color="var(--or)";}
+}
+
+// Sidebar QR
+let sideQrBuilt=false;let sideQrUrl="";
+function genSideQR(){
+  const name=document.getElementById("sqrName").value.trim();if(!name)return;
+  const id=name.toLowerCase().replace(/[^a-z0-9]/g,"-").replace(/-+/g,"-");
+  const base=location.origin+location.pathname.replace("dashboard.html","")+"client-form.html";
+  sideQrUrl=`${base}?client=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`;
+  document.getElementById("sqr-url-box").textContent=sideQrUrl;
+  document.getElementById("sqr-result").style.display="block";
+  const cont=document.getElementById("sqr-code");cont.innerHTML="";
+  new QRCode(cont,{text:sideQrUrl,width:160,height:160,colorDark:"#0e1520",colorLight:"#f6f7f9",correctLevel:QRCode.CorrectLevel.H});
+  sideQrBuilt=true;
+}
+function copySide(){navigator.clipboard.writeText(sideQrUrl).then(()=>{const b=event.target;b.textContent="Copied!";setTimeout(()=>b.textContent="Copy",2000)})}
+function dlSide(){const c=document.querySelector("#sqr-code canvas");if(!c)return;const a=document.createElement("a");const n=document.getElementById("sqrName").value.trim();a.download="spherion-qr-"+n.replace(/\s+/g,"-")+".png";a.href=c.toDataURL();a.click()}
+
+function demo(){return[
+  {"Timestamp":new Date(Date.now()-3600000).toISOString(),"Request ID":"SR-DEMO001","Client ID":"acme-corp","Client Name":"Acme Corp","Job Title":"Warehouse Associate","Pay Range":"$17–$21/hr","Headcount":5,"Department / Cost Code":"Operations — CC-2100","Employment Type":"Temp-to-Perm","Level of Urgency":"critical","Target Start Date":"2025-06-01","Hiring Manager":"Jane Smith","Notes / Description":"2nd shift 3pm–11pm. Steel-toed boots required. Forklift cert a plus.","Requester Name":"Bob Johnson","Requester Email":"bob@acme.com","Status":"New","Last Updated":new Date().toISOString()},
+  {"Timestamp":new Date(Date.now()-7200000).toISOString(),"Request ID":"SR-DEMO002","Client ID":"globex-inc","Client Name":"Globex Inc","Job Title":"Staff Accountant","Pay Range":"$65K–$80K","Headcount":1,"Department / Cost Code":"Finance — CC-3300","Employment Type":"Full-Time","Level of Urgency":"high","Target Start Date":"2025-07-15","Hiring Manager":"Alice Brown","Notes / Description":"CPA preferred. QuickBooks & NetSuite experience.","Requester Name":"Carol White","Requester Email":"carol@globex.com","Status":"Reviewing","Last Updated":new Date().toISOString()},
+  {"Timestamp":new Date(Date.now()-86400000).toISOString(),"Request ID":"SR-DEMO003","Client ID":"acme-corp","Client Name":"Acme Corp","Job Title":"CNC Machinist","Pay Range":"$22–$28/hr","Headcount":3,"Department / Cost Code":"Manufacturing — CC-1010","Employment Type":"Contract","Level of Urgency":"medium","Target Start Date":"2025-08-01","Hiring Manager":"Dave Lee","Notes / Description":"Haas or Mazak experience required. 1st shift.","Requester Name":"Eve Davis","Requester Email":"eve@acme.com","Status":"Active","Last Updated":new Date().toISOString()},
+  {"Timestamp":new Date(Date.now()-172800000).toISOString(),"Request ID":"SR-DEMO004","Client ID":"initech","Client Name":"Initech","Job Title":"HR Generalist","Pay Range":"$55K–$70K","Headcount":1,"Department / Cost Code":"HR — CC-5500","Employment Type":"Full-Time","Level of Urgency":"low","Target Start Date":"","Hiring Manager":"","Notes / Description":"","Requester Name":"Frank Miller","Requester Email":"frank@initech.com","Status":"Filled","Last Updated":new Date().toISOString()},
+  {"Timestamp":new Date(Date.now()-259200000).toISOString(),"Request ID":"SR-DEMO005","Client ID":"globex-inc","Client Name":"Globex Inc","Job Title":"IT Help Desk Technician","Pay Range":"$20–$24/hr","Headcount":2,"Department / Cost Code":"IT — CC-4400","Employment Type":"Contract-to-Hire","Level of Urgency":"high","Target Start Date":"2025-05-20","Hiring Manager":"Grace Kim","Notes / Description":"CompTIA A+ preferred. Windows 11 support environment.","Requester Name":"Hank Wilson","Requester Email":"hank@globex.com","Status":"New","Last Updated":new Date().toISOString()},
+];}
+
+setInterval(()=>{if(!APPS_SCRIPT_URL.includes("PASTE_"))loadData();},60000);
+loadData();
+</script>
+</body>
+</html>
